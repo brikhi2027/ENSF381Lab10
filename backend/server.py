@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS # Importing cors here 
 import json
 import os
 
-app = Flask(__name__)
+app = Flask(__name__) 
+CORS(app) # Here, we enable CORS for all domains on all routes
 
 def load_products():
     with open ('products.json', 'r') as f:
@@ -36,6 +38,7 @@ def get_image(filename):
 def update_product(product_id):
     products = load_products()
     updated_version = request.json
+    #if p['id'] == product_id:
     product = next((p for p in products if p['id'] == product_id), None)
     if (product_id == None):
         return jsonify('', 404)
@@ -49,16 +52,12 @@ def update_product(product_id):
 @app.route('/products/<int:product_id>', methods = ['DELETE'])
 def remove_product(product_id):
     products = load_products()
-    product_index = next((index for index, p in enumerate(products) if p['id'] == product_id), None)
-    if product_index is None:
-        return jsonify({'error' : 'Product not found.'}), 404
-    
-    del products[product_index]
-
-    with open('products.json', 'w') as f:
-        json.dump({"products": products}, f)
-    
-    return jsonify({'message' : 'Product successfully deleted.'}), 200
+    for p in products:
+        if p['id'] == product_id:
+            products.remove(p)
+            return jsonify({"products": products})
+        else:
+            return jsonify('', 404)
 
 if __name__ == '__main__':
     app.run(debug = True)
