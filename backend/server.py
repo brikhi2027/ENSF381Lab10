@@ -52,12 +52,16 @@ def update_product(product_id):
 @app.route('/products/<int:product_id>', methods = ['DELETE'])
 def remove_product(product_id):
     products = load_products()
-    for p in products:
-        if p['id'] == product_id:
-            products.remove(p)
-            return jsonify({"products": products})
-        else:
-            return jsonify('', 404)
+    product_index = next((index for index, p in enumerate(products) if p['id'] == product_id), None)
+    if product_index is None:
+        return jsonify({'error' : 'Product not found.'}), 404
+    
+    del products[product_index]
+
+    with open('products.json', 'w') as f:
+        json.dump({"products": products}, f)
+    
+    return jsonify({'message' : 'Product successfully deleted.'}), 200
 
 if __name__ == '__main__':
     app.run(debug = True)
